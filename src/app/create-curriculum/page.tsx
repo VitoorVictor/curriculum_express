@@ -7,13 +7,12 @@ import { StateSelect } from "@/components/StateSelect/state-select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Check, Icon, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { Check, Plus, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 
 export default function CreateCurriculumPage() {
-  const [skills, setSkills] = useState<string[]>([]);
   const [currentSkill, setCurrentSkill] = useState<string>("");
 
   const form = useForm({
@@ -28,7 +27,11 @@ export default function CreateCurriculumPage() {
       repository: "",
       portfolio: "",
       resume: "",
-      skills: [{}],
+      skills: [
+        {
+          skill: "",
+        },
+      ],
       experiences: [
         {
           companyName: "",
@@ -38,7 +41,11 @@ export default function CreateCurriculumPage() {
           start: "",
           end: "",
           currently: false,
-          activities: [],
+          activities: [
+            {
+              activity: "",
+            },
+          ],
         },
       ],
       education: [
@@ -61,32 +68,34 @@ export default function CreateCurriculumPage() {
       ],
     },
   });
-  const { register, reset, control } = form;
+  const { register, control } = form;
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: unknown) => {
     console.log("Form data:", data);
   };
 
   const {
     fields: fieldsSkills,
-    append: appendSkills,
-    remove: removeSkills,
+    append: appendSkill,
+    remove: removeSkill,
   } = useFieldArray({
     control,
     name: "skills",
   });
 
-  const handleAddSkill = () => {
-    if (currentSkill.trim() !== "") {
-      setSkills((prevSkills) => [...prevSkills, currentSkill]); // Adiciona a nova habilidade ao array
-      setCurrentSkill(""); // Limpa o campo de entrada
-    }
-  };
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSkills((prevSkills) =>
-      prevSkills.filter((skill) => skill !== skillToRemove)
-    );
-  };
+  const {
+    fields: fieldsExperiences,
+    append: appendExperience,
+    remove: removeExperience,
+  } = useFieldArray({
+    control,
+    name: "experiences",
+  });
+
+  useEffect(() => {
+    removeSkill(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 px-16 py-12">
@@ -164,25 +173,16 @@ export default function CreateCurriculumPage() {
                 Habilidades Técnicas
               </h1>
               <div className="flex flex-wrap gap-2">
-                {/* {skills.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    variant="outline"
-                    className="flex justify-center py-1 text-sm truncate w-auto"
-                  >
-                    {skill}
-                  </Badge>
-                ))} */}
-                {skills.map((skill, index) => (
+                {fieldsSkills.map((field, index) => (
                   <div key={index} className="relative group">
                     <Badge
                       variant="outline"
                       className="flex justify-center py-1 text-sm truncate w-auto transition-all duration-200 bg-opacity-100 group-hover:bg-opacity-50"
                     >
-                      {skill}
+                      {field.skill}
                     </Badge>
                     <button
-                      onClick={() => handleRemoveSkill(skill)} // Chame sua função aqui
+                      onClick={() => removeSkill(index)} // Chame sua função aqui
                       className="p-0.5 absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     >
                       <X />
@@ -194,7 +194,6 @@ export default function CreateCurriculumPage() {
                 <Label htmlFor="skills">Habilidade</Label>
                 <div className="flex gap-2">
                   <Input
-                    id="skills"
                     type="text"
                     className="w-1/3 "
                     value={currentSkill}
@@ -205,7 +204,13 @@ export default function CreateCurriculumPage() {
                       }
                     }}
                   />
-                  <Button size={"icon"} onClick={handleAddSkill}>
+                  <Button
+                    size={"icon"}
+                    onClick={() => {
+                      appendSkill({ skill: currentSkill });
+                      setCurrentSkill("");
+                    }}
+                  >
                     <Check />
                   </Button>
                 </div>
@@ -213,64 +218,142 @@ export default function CreateCurriculumPage() {
             </div>
             <Separator />
             <div className="grid gap-4">
-              <div>
-                <div className="flex gap-2">
+              <div className="flex gap-2 justify-between items-end">
+                <div className="grid gap-2">
                   <h1 className="lg:text-2xl font-bold text-gray-800">
                     Experiências
                   </h1>
-                  <Button size={"icon"}>
-                    <Plus />
-                  </Button>
+                  <Label>Obs: Adicione mais experiências caso precisar</Label>
                 </div>
-                <Label>Obs: Adicione mais experiências caso precisar</Label>
+                <Button
+                  onClick={() => {
+                    appendExperience({
+                      companyName: "",
+                      role: "",
+                      city: "",
+                      state: "",
+                      start: "",
+                      end: "",
+                      currently: false,
+                      activities: [],
+                    });
+                  }}
+                >
+                  <Plus />
+                  Adicionar
+                </Button>
               </div>
-              <div></div>
-              <div className="relative grid grid-cols-2 gap-x-2 gap-y-4 p-5 border border-zinc-200 rounded-md">
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Nome da Empresa</Label>
-                  <Input id="phone" type="phone" />
-                </div>
-                <div className="grid gap-2 ">
-                  <Label htmlFor="phone">Função ou Cargo</Label>
-                  <Input id="phone" type="phone" />
-                </div>
-                <div className="grid grid-cols-2 gap-2 ">
-                  <div className="grid gap-2 ">
-                    <Label htmlFor="phone">Cidade</Label>
-                    <Input id="phone" type="phone" />
+              {fieldsExperiences.map((fieldExperience, indexExperience) => {
+                const {
+                  fields: fieldsActivities,
+                  append: appendActivity,
+                  remove: removeActivity,
+                  // eslint-disable-next-line react-hooks/rules-of-hooks
+                } = useFieldArray({
+                  control,
+                  name: `experiences.${indexExperience}.activities`,
+                });
+
+                return (
+                  <div
+                    key={indexExperience}
+                    className="relative grid grid-cols-2 gap-x-2 gap-y-4 p-5 border border-zinc-200 rounded-md"
+                  >
+                    <button
+                      onClick={() => removeExperience(indexExperience)} // Chame sua função aqui
+                      className="p-0.5 absolute top-0 right-4 transform -translate-y-1/2 border-red-600 border bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center"
+                    >
+                      <X />
+                    </button>
+                    <div className="grid gap-2">
+                      <Label>Nome da Empresa</Label>
+                      <Input
+                        type="text"
+                        {...register(
+                          `experiences.${indexExperience}.companyName`
+                        )}
+                      />
+                    </div>
+                    <div className="grid gap-2 ">
+                      <Label>Função ou Cargo</Label>
+                      <Input
+                        type="text"
+                        {...register(`experiences.${indexExperience}.role`)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 ">
+                      <div className="grid gap-2 ">
+                        <Label>Cidade</Label>
+                        <Input
+                          type="text"
+                          {...register(`experiences.${indexExperience}.city`)}
+                        />
+                      </div>
+                      <div className="grid gap-2 ">
+                        <Label>Estado</Label>
+                        <StateSelect
+                          name={`experiences.${indexExperience}.state`}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2 ">
+                      <div className="grid gap-2 col-span-2 ">
+                        <Label>Início</Label>
+                        <Input
+                          type="text"
+                          {...register(`experiences.${indexExperience}.start`)}
+                        />
+                      </div>
+                      <div className="grid gap-2  col-span-2 ">
+                        <Label>Término</Label>
+                        <Input
+                          type="text"
+                          {...register(`experiences.${indexExperience}.end`)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2 justify-between items-center">
+                        <Label>Atualmente</Label>
+                        <Switch
+                          {...register(
+                            `experiences.${indexExperience}.currently`
+                          )}
+                          className="translate -rotate-90 mb-2"
+                        />
+                      </div>
+                    </div>
+                    <Separator className="col-span-2" />
+                    <div className="col-span-2 flex items-center justify-between gap-2">
+                      <Label>Atividades exercídas na função</Label>
+                      <Button
+                        size={"sm"}
+                        variant={"outline"}
+                        className="border-primary"
+                        onClick={() => appendActivity({ activity: "" })}
+                      >
+                        <Plus />
+                        Adicionar Atividade
+                      </Button>
+                    </div>
+                    {fieldsActivities.map((fieldActivity, indexActivity) => (
+                      <div key={indexActivity} className="relative col-span-2">
+                        <button
+                          onClick={() => removeActivity(indexActivity)} // Chame sua função aqui
+                          className=" absolute top-8 right-2 border-red-600 border bg-white text-red-500 rounded-full w-5 h-5 flex items-center justify-center"
+                        >
+                          <X />
+                        </button>
+                        <Label>Atividade {indexActivity + 1}</Label>
+                        <Input
+                          type="text"
+                          {...register(
+                            `experiences.${indexExperience}.activities.${indexActivity}.activity`
+                          )}
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <div className="grid gap-2 ">
-                    <Label htmlFor="phone">Estado</Label>
-                    <Input id="phone" type="phone" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-7 gap-2 ">
-                  <div className="grid gap-2 col-span-3 ">
-                    <Label htmlFor="phone">Início</Label>
-                    <Input id="phone" type="phone" />
-                  </div>
-                  <div className="grid gap-2  col-span-3 ">
-                    <Label htmlFor="phone">Término</Label>
-                    <Input id="phone" type="phone" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Atualmente</Label>
-                    <Input id="phone" type="checkbox" />
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="phone">Atividade 1</Label>
-                  <Input id="phone" type="text" />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="phone">Atividade 2</Label>
-                  <Input id="phone" type="text" />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="phone">Atividade 3</Label>
-                  <Input id="phone" type="text" />
-                </div>
-              </div>
+                );
+              })}
             </div>
             {/* 
             <h1 className="lg:text-2xl font-bold text-gray-800 mb-4">
